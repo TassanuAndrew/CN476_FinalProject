@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Sukhumvit Set",
+    "Noto Sans Thai", Arial, sans-serif;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}

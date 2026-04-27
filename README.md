@@ -1,138 +1,308 @@
-# 🍜 บ้านขนมจีน — Web App สั่งขนมจีน (PWA)
+# บ้านขนมจีน — Online Ordering PWA
 
-CN476 Final Project — ระบบสั่งซื้อสินค้าออนไลน์แบบ Progressive Web App
-ลูกค้าสแกน QR code → เลือกสั่งล่วงหน้า / ซื้อเลย! → เจ้าของร้านได้ push notification + เสียงแจ้งเตือนแบบ real-time
+A Thai-language **Progressive Web App** for a small kanom-jeen (Thai rice noodles)
+shop. Customers browse the menu, place either an instant order with on-the-spot
+PromptPay payment or a scheduled pre-order, and the owner manages everything
+from an installable mobile dashboard with push-notification alerts.
 
-## ฟีเจอร์
+> **Live demo:** https://kanomjeen-bannongbo.vercel.app
+> **Course:** CN476 Final Project
 
-**ลูกค้า**
-- 📦 **สั่งล่วงหน้า** — กรอกฟอร์ม (รับเอง/ส่ง, จำนวน, วันนัด, รายละเอียด, เบอร์, ชื่อ) → รอติดต่อกลับ
-- 🛒 **ซื้อเลย!** — เลือกสินค้าในสต็อก, มีตะกร้า, รอเจ้าของยืนยัน → QR PromptPay → ชำระ
-- ออเดอร์ **ซื้อเลย!** หมดอายุอัตโนมัติใน 1 ชั่วโมง
+---
 
-**เจ้าของร้าน (admin)**
-- 🔔 ตารางออเดอร์เข้า / ออเดอร์สินค้า / ออเดอร์ยกเลิก (real-time polling 3 วิ)
-- เสียง **ติ๊ง** + Web Push Notification เมื่อมีออเดอร์ใหม่ + เงินเข้า
-- รับ/ยกเลิกออเดอร์, ยืนยันรับเงิน manual
-- จัดการสินค้า (เพิ่ม/แก้/ลบ + อัพสต็อก real-time)
-- ตั้งค่า PromptPay, ชื่อร้าน, รหัสผ่าน
+## ✨ Features
 
-## Tech Stack
+### Customer side
 
-- **Next.js 16** (App Router) + **React 19** + **Tailwind CSS 4**
-- **Prisma ORM** + **SQLite** (dev) / **PostgreSQL** (prod)
-- **Web Push API** (VAPID) + Service Worker
-- **PromptPay QR** generation (`promptpay-qr` + `qrcode`)
-- **JWT** (jose) cookie-based admin auth
-- **Zustand** (cart state, persistent)
-- PWA (manifest + service worker, installable on mobile)
+- 🛒 **Two ordering modes**
+  - **ซื้อเลย!** — order now, pay immediately via PromptPay QR
+  - **สั่งล่วงหน้า** — schedule pickup or delivery, pay on receipt
+- 🛍️ Persistent cart per mode (separate carts)
+- 📱 Installable PWA — works offline-capable, looks native on iOS/Android
+- 📜 Order history lookup by phone number
+- 🎯 Auto-redirects to payment QR when admin accepts
 
-## Run locally
+### Admin side
+
+- 📋 Live order dashboard (3-second polling, auto-refresh)
+- 🔔 Web Push notifications for new orders (works on iOS PWA after install)
+- 🔉 In-app "ding" sound when a new order arrives while dashboard is open
+- 💰 Accept / Cancel / Confirm-payment workflow
+- 📦 Product CRUD with image upload to Supabase Storage
+- 🖨️ Print receipt
+- 📊 Sales dashboard (today / month revenue, top items)
+- ⚙️ Settings: change password, set shop PromptPay phone
+
+### Production-grade backend
+
+- 🔐 JWT admin auth via httpOnly cookies + Next.js middleware
+- 🛡️ Per-IP rate limiting on order create + admin login
+- ✅ Centralised input validation (size limits, type checks, sanitisation)
+- 🌐 Vercel function region pinned to `syd1` (same as DB)
+- 🗑️ Soft-delete for products with order history (FK-safe)
+
+---
+
+## 🧱 Tech stack
+
+| Layer | Tech |
+|---|---|
+| Framework | **Next.js 16** (App Router, RSC) + **React 19** |
+| Language | **TypeScript** strict mode |
+| Styling | **Tailwind CSS 4** |
+| State | **Zustand** (persistent carts) |
+| Database | **PostgreSQL** on Supabase (Sydney region) |
+| ORM | **Prisma 5** |
+| Auth | **jose** JWT + bcrypt |
+| Push | **web-push** + Service Worker + VAPID |
+| Storage | **Supabase Storage** for product images |
+| Payment | **promptpay-qr** + **qrcode** generation |
+| Hosting | **Vercel** (functions in `syd1`) |
+
+---
+
+## 🗺️ Architecture
+
+```mermaid
+flowchart LR
+  subgraph Client[Customer device]
+    HOME[Home] --> BUY[Buynow]
+    HOME --> PRE[Preorder]
+    HOME --> HIST[History]
+    BUY --> CART1[Cart]
+    PRE --> CART2[Preorder Cart]
+    CART1 --> PAY[Payment QR]
+  end
+
+  subgraph Admin[Admin device — installed PWA]
+    DASH[Dashboard]
+    PROD[Products]
+    STAT[Stats]
+    SET[Settings]
+    SW[Service Worker]
+  end
+
+  subgraph Vercel[Vercel — syd1 region]
+    MW[middleware.ts<br/>JWT guard]
+    API[API routes]
+    PUSH_SVC[push.ts]
+  end
+
+  subgraph Supabase[Supabase — Sydney]
+    DB[(PostgreSQL)]
+    STORE[(Storage<br/>product images)]
+  end
+
+  Client -->|HTTPS| MW
+  Admin -->|HTTPS + cookie| MW
+  MW --> API
+  API --> DB
+  API --> STORE
+  API -->|new order| PUSH_SVC
+  PUSH_SVC -->|VAPID JWT| APPLE[Apple Push / FCM]
+  APPLE -->|Web Push| SW
+  SW -->|notification| Admin
+```
+
+### Data model
+
+```mermaid
+erDiagram
+  Admin {
+    int id PK
+    string username UK
+    string passwordHash
+    string promptpayPhone
+    string shopName
+  }
+  Product {
+    int id PK
+    string name
+    float price
+    string imageUrl
+    int stock
+    bool active
+  }
+  Order {
+    int id PK
+    string type "BUYNOW or PREORDER"
+    string status "PENDING/ACCEPTED/PAID/CANCELLED/EXPIRED"
+    string customerName
+    string customerPhone
+    string deliveryType "PICKUP or DELIVERY"
+    string deliveryDetail
+    string pickupDateText
+    float totalPrice
+    datetime createdAt
+    datetime acceptedAt
+    datetime paidAt
+    datetime expiresAt
+  }
+  OrderItem {
+    int id PK
+    int orderId FK
+    int productId FK
+    int quantity
+    float priceAtOrder
+    string productName
+  }
+  PushSubscription {
+    int id PK
+    string endpoint UK
+    string p256dh
+    string auth
+  }
+
+  Order ||--o{ OrderItem : has
+  Product ||--o{ OrderItem : referenced
+```
+
+### Order lifecycle
+
+```mermaid
+stateDiagram-v2
+  [*] --> PENDING: customer submits
+  PENDING --> ACCEPTED: admin accepts
+  PENDING --> CANCELLED: admin rejects
+  ACCEPTED --> PAID: BUYNOW – customer pays QR<br/>or admin confirms
+  ACCEPTED --> EXPIRED: payment timeout
+  ACCEPTED --> CANCELLED: admin cancels
+  PAID --> [*]
+  CANCELLED --> [*]
+  EXPIRED --> [*]
+```
+
+---
+
+## 🚀 Local development
 
 ```bash
-# 1. install
+# 1. Install
 npm install
 
-# 2. setup DB + seed
+# 2. Set up .env (see ENV section below)
+
+# 3. Push schema to your DB + seed default admin/products
 npm run db:push
 npm run db:seed
 
-# 3. start dev
+# 4. Run dev server
 npm run dev
+# → http://localhost:3000
 ```
 
-เปิด `http://localhost:3000` (ลูกค้า), `http://localhost:3000/admin/login` (admin)
+Default admin login (created by seed):
+- username: `admin`
+- password: `admin1234`
+- ⚠️ **change immediately in `/admin/settings`**
 
-**Default admin login:** `admin` / `admin1234`
+---
 
-## ENV vars (`.env`)
+## 🔑 Environment variables
 
-```
-DATABASE_URL="file:./dev.db"
-ADMIN_JWT_SECRET="<random long string>"
-VAPID_PUBLIC_KEY="<generated>"
-VAPID_PRIVATE_KEY="<generated>"
-NEXT_PUBLIC_VAPID_PUBLIC_KEY="<same as VAPID_PUBLIC_KEY>"
-VAPID_SUBJECT="mailto:you@example.com"
+```bash
+# Database
+DATABASE_URL="postgresql://...?pgbouncer=true&connection_limit=1"
+DIRECT_URL="postgresql://...:5432/postgres"
 
+# Auth (use a long random string in production: openssl rand -base64 64)
+ADMIN_JWT_SECRET="..."
+
+# Web Push (generate with: npx web-push generate-vapid-keys)
+VAPID_PUBLIC_KEY="B..."
+VAPID_PRIVATE_KEY="..."
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="B..."   # must equal VAPID_PUBLIC_KEY
+VAPID_SUBJECT="https://your-domain.com"  # ⚠️ Apple requires real URL/email — no .local
+
+# Initial admin (only used by seed script)
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="admin1234"
-ADMIN_PROMPTPAY_PHONE="0812345678"
-```
+ADMIN_PROMPTPAY_PHONE="0xxxxxxxxx"
 
-สร้าง VAPID keys ใหม่ได้ที่:
-```bash
-node -e "const wp=require('web-push');console.log(wp.generateVAPIDKeys())"
+# Supabase Storage (for product images)
+SUPABASE_URL="https://xxx.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="eyJ..."   # service_role, NOT anon — server only
 ```
 
 ---
 
-## 🚀 Deploy to Vercel (kanomjeen.vercel.app)
+## 📂 Project structure
 
-### Step 1: เปลี่ยน DB จาก SQLite เป็น PostgreSQL
-
-Vercel ใช้ SQLite ไม่ได้ ต้องใช้ Postgres ของ Supabase (ฟรี)
-
-1. ไป https://supabase.com → สมัคร → New project
-2. รอจน project พร้อม → ไป **Settings → Database** → ก็อป **Connection string** (URI mode, เปลี่ยน password)
-3. แก้ `prisma/schema.prisma`:
-   ```prisma
-   datasource db {
-     provider = "postgresql"   // <- เปลี่ยนจาก "sqlite"
-     url      = env("DATABASE_URL")
-   }
-   ```
-4. แก้ `.env`:
-   ```
-   DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres"
-   ```
-5. รัน:
-   ```bash
-   npm run db:push
-   npm run db:seed
-   ```
-
-### Step 2: Push to GitHub
-
-```bash
-git init
-git add .
-git commit -m "initial commit"
-gh repo create kanomjeen --public --source=. --push
-# หรือสร้าง repo ใน github.com แล้ว git remote add origin ...
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── admin/        # Protected by middleware (JWT cookie)
+│   │   │   ├── login/
+│   │   │   ├── orders/   # accept, cancel, confirm-payment
+│   │   │   ├── products/ # CRUD with soft-delete
+│   │   │   ├── stats/    # Sales aggregations
+│   │   │   ├── upload/   # Image → Supabase Storage
+│   │   │   └── ...
+│   │   └── orders/
+│   │       ├── buynow/   # POST: instant order
+│   │       ├── preorder/ # POST: scheduled order
+│   │       └── history/  # GET by phone
+│   ├── admin/            # Dashboard pages
+│   ├── buynow/           # Browse → cart → pay flow
+│   ├── preorder/         # Browse → cart → confirm flow
+│   ├── cart/             # Buynow checkout
+│   ├── history/          # Customer order lookup
+│   ├── order/[id]/       # Status / payment / done
+│   ├── layout.tsx        # PWA metadata, OG tags
+│   └── globals.css
+├── lib/
+│   ├── auth.ts           # JWT sign/verify
+│   ├── db.ts             # Prisma singleton
+│   ├── push.ts           # web-push sender
+│   ├── storage.ts        # Supabase Storage client
+│   ├── validation.ts     # Centralised input validation
+│   ├── rateLimit.ts      # In-memory rate limiter
+│   ├── cart.ts           # Buynow cart (zustand persist)
+│   └── preorderCart.ts   # Preorder cart (zustand persist)
+├── components/
+│   └── Icon.tsx
+└── middleware.ts         # JWT guard for /admin and /api/admin
+prisma/
+├── schema.prisma
+└── seed.ts
+public/
+├── sw.js                 # Service worker (push handler)
+├── manifest.json         # PWA manifest
+└── icon-*.png            # PWA icons
 ```
 
-### Step 3: Deploy ที่ Vercel
+---
 
-1. ไป https://vercel.com → New Project → import GitHub repo
-2. Project name: `kanomjeen` (จะได้ URL `kanomjeen.vercel.app`)
-3. ใส่ **Environment Variables** (จาก `.env`):
-   - `DATABASE_URL`
-   - `ADMIN_JWT_SECRET`
-   - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_SUBJECT`
-   - `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_PROMPTPAY_PHONE`
-4. Deploy!
+## 🔒 Security notes
 
-### Step 4: สร้าง QR ป้ายหน้าบ้าน
-
-ไป https://www.qr-code-generator.com → ใส่ URL `https://kanomjeen.vercel.app` → Download PNG → ปริ้นแปะ
+- All `/api/admin/*` routes are guarded by middleware that verifies an
+  httpOnly JWT cookie. The cookie is `secure` in production and `sameSite=lax`.
+- Admin password is hashed with bcrypt (cost 10).
+- Order-create endpoints validate input shape, length, quantity bounds, and
+  reject duplicate productIds in one order.
+- Rate limiting: order create = 10/min/IP, admin login = 5/5min/IP, history
+  lookup = 20/min/IP.
+- The `service_role` Supabase key is only ever read in server code (Storage
+  upload) — never exposed to the client.
+- **Pre-order orders do not check stock** by design (customer commits to wait).
 
 ---
 
-## 📱 ติดตั้งเป็นแอพ (ฝั่งเจ้าของร้าน)
+## 🧪 Manual test checklist
 
-1. เปิด `https://kanomjeen.vercel.app/admin/login` บน Chrome (Android) / Safari (iOS)
-2. เมนู → **Add to Home Screen**
-3. เปิดแอพจาก home screen → login → กดปุ่ม **เปิดการแจ้งเตือน**
-4. ทดสอบ: ลองสั่งซื้อจากเครื่องอื่น → จะได้ notification + เสียงติ๊ง
-
-> **iOS:** push notification ใช้ได้เฉพาะเมื่อติดตั้ง PWA ลง Home Screen แล้ว (iOS 16.4+)
+- [ ] Place buynow order → admin accepts → pay via QR → marked PAID
+- [ ] Place preorder with pickup → admin accepts → no payment screen
+- [ ] Order with phone → look up in `/history`
+- [ ] Spam 11 orders within a minute → 11th rejected with 429
+- [ ] Admin login wrong 6 times → blocked with 429
+- [ ] Upload product image (jpg < 2MB) → appears in catalog
+- [ ] Upload 5MB image → rejected with size error
+- [ ] Delete product that has past orders → soft-deleted (active=false)
+- [ ] On iPhone: install PWA → grant permission → new order → notification arrives
 
 ---
 
-## 🔮 Roadmap (ภายหลัง)
+## 📝 License
 
-- [ ] Payment Gateway (GBPrimePay/Omise) — auto confirm payment
-- [ ] รูปสินค้า upload widget (ตอนนี้ paste URL)
-- [ ] Multi-admin role
-- [ ] รายงานยอดขาย รายวัน/เดือน
+Educational project. No commercial license.

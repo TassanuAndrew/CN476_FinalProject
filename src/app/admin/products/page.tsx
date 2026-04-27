@@ -14,6 +14,25 @@ interface Product {
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFileUpload(file: File) {
+    if (!editing) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "อัปโหลดไม่สำเร็จ");
+        return;
+      }
+      setEditing({ ...editing, imageUrl: data.url });
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function load() {
     const r = await fetch("/api/admin/products");
@@ -189,17 +208,46 @@ export default function AdminProducts() {
                 </div>
               </div>
               <div>
-                <div className="label mb-1">URL รูปภาพ</div>
+                <div className="label mb-1">รูปภาพ</div>
+                {editing.imageUrl && (
+                  <div className="mb-2 relative w-full aspect-square max-w-[180px] mx-auto rounded-xl overflow-hidden bg-stone-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={editing.imageUrl}
+                      alt="preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <label className="block">
+                  <span className="sr-only">เลือกรูป</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleFileUpload(f);
+                      e.target.value = "";
+                    }}
+                    className="block w-full text-sm text-stone-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-stone-900 file:text-white hover:file:bg-stone-800 disabled:opacity-50"
+                  />
+                </label>
+                {uploading && (
+                  <div className="text-xs text-orange-700 mt-1.5 font-semibold">
+                    กำลังอัปโหลด...
+                  </div>
+                )}
                 <input
                   value={editing.imageUrl || ""}
                   onChange={(e) =>
                     setEditing({ ...editing, imageUrl: e.target.value })
                   }
-                  placeholder="https://..."
-                  className="field"
+                  placeholder="หรือวาง URL รูปเอง"
+                  className="field mt-2"
                 />
                 <div className="text-xs text-stone-400 mt-1.5">
-                  อัปโหลดรูปฟรีที่ imgur.com / cloudinary.com แล้วก็อปลิงก์มาวาง
+                  รองรับ JPG / PNG / WEBP ไม่เกิน 2MB
                 </div>
               </div>
             </div>

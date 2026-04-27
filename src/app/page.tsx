@@ -38,8 +38,15 @@ export default function Home() {
       </div>
 
       <Link
+        href="/history"
+        className="mt-10 text-sm text-stone-600 hover:text-stone-900 font-semibold underline underline-offset-4"
+      >
+        ดูประวัติการสั่งซื้อ
+      </Link>
+
+      <Link
         href="/admin/login"
-        className="mt-14 text-xs text-stone-400 hover:text-stone-600 underline underline-offset-4"
+        className="mt-6 text-xs text-stone-400 hover:text-stone-600 underline underline-offset-4"
       >
         สำหรับเจ้าของร้าน
       </Link>

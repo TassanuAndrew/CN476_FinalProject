@@ -293,9 +293,9 @@ function TabBtn({
 
 function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-auto shadow-deep">
-        <div className="p-5 border-b border-stone-100 flex items-start justify-between">
+    <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 print:bg-transparent print:p-0 print:backdrop-blur-none print:static">
+      <div className="print-receipt bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-auto shadow-deep print:shadow-none print:rounded-none print:max-h-none print:max-w-full">
+        <div className="p-5 border-b border-stone-100 flex items-start justify-between print:hidden">
           <div>
             <div className="text-xs font-semibold tracking-widest uppercase text-orange-700">
               {order.type === "BUYNOW" ? "Order Now" : "Pre-order"}
@@ -304,12 +304,29 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
               ออเดอร์ <span className="font-mono">#{order.id}</span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center"
-          >
-            <Icon name="close" size={20} />
-          </button>
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => window.print()}
+              className="btn-dark text-xs font-bold px-3 py-2 rounded-lg"
+            >
+              พิมพ์
+            </button>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center"
+            >
+              <Icon name="close" size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Print-only header */}
+        <div className="hidden print:block p-4 text-center border-b border-stone-300">
+          <div className="font-black text-2xl">บ้านขนมจีน</div>
+          <div className="text-sm">ใบสั่งซื้อ #{order.id}</div>
+          <div className="text-xs text-stone-600">
+            {new Date(order.createdAt).toLocaleString("th-TH")}
+          </div>
         </div>
         <div className="p-5 space-y-3">
           <Field label="ชื่อ">{order.customerName || "—"}</Field>

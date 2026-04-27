@@ -14,13 +14,18 @@ interface Product {
 
 export default function BuyNowPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Product | null>(null);
   const cartCount = useCart((s) => s.count());
 
   useEffect(() => {
     fetch("/api/products")
       .then((r) => r.json())
-      .then(setProducts);
+      .then((data) => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   return (
@@ -52,6 +57,23 @@ export default function BuyNowPage() {
           )}
         </Link>
       </header>
+
+      {loading && (
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="card p-3 animate-pulse">
+              <div className="aspect-square bg-stone-200 rounded-xl mb-2" />
+              <div className="h-4 bg-stone-200 rounded w-3/4 mb-2" />
+              <div className="h-5 bg-stone-200 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      )}
+      {!loading && products.length === 0 && (
+        <div className="card p-8 text-center text-stone-400">
+          ยังไม่มีสินค้า
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         {products.map((p) => {

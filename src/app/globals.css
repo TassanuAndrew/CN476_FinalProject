@@ -133,3 +133,25 @@ button {
 .pulse-dot {
   animation: pulse-ring 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
+
+/* Print: only show the order modal, hide everything else */
+@media print {
+  html, body {
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .print-receipt, .print-receipt * {
+    visibility: visible;
+  }
+  .print-receipt {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    box-shadow: none !important;
+  }
+  nav, .no-print {
+    display: none !important;
+  }
+}

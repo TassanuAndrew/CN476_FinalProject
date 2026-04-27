@@ -16,6 +16,7 @@ export default function AdminNav() {
   const tabs = [
     { href: "/admin", label: "ออเดอร์", icon: "list" as const },
     { href: "/admin/products", label: "สินค้า", icon: "box" as const },
+    { href: "/admin/stats", label: "สถิติ", icon: "spark" as const },
     { href: "/admin/settings", label: "ตั้งค่า", icon: "gear" as const },
   ];
 

@@ -24,49 +24,61 @@ export default function AdminSettings() {
       }),
     });
     if (res.ok) {
-      setMsg("บันทึกแล้ว ✅");
+      setMsg("บันทึกแล้ว");
       setPassword("");
     } else setMsg("เกิดข้อผิดพลาด");
   }
 
   return (
-    <main className="p-3 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-3">ตั้งค่า</h1>
-      <div className="bg-white rounded-2xl shadow p-4 space-y-3">
+    <main className="p-4 max-w-md mx-auto">
+      <div className="mb-4">
+        <div className="text-xs font-semibold tracking-widest text-red-700 uppercase">
+          Settings
+        </div>
+        <h1 className="text-2xl font-black tracking-tight">ตั้งค่าร้าน</h1>
+      </div>
+
+      <div className="card p-5 space-y-4">
         <div>
-          <label className="text-sm font-semibold">ชื่อร้าน</label>
+          <div className="label mb-1">ชื่อร้าน</div>
           <input
             value={data.shopName}
             onChange={(e) => setData({ ...data, shopName: e.target.value })}
-            className="w-full border-2 border-stone-200 rounded-xl p-2 mt-1"
+            className="field"
           />
         </div>
         <div>
-          <label className="text-sm font-semibold">เบอร์ PromptPay (สำหรับ QR รับเงิน)</label>
+          <div className="label mb-1">
+            เบอร์ PromptPay <span className="text-stone-400 font-normal">(สำหรับ QR รับเงิน)</span>
+          </div>
           <input
             value={data.promptpayPhone || ""}
             onChange={(e) => setData({ ...data, promptpayPhone: e.target.value })}
             placeholder="0812345678"
-            className="w-full border-2 border-stone-200 rounded-xl p-2 mt-1"
+            className="field font-mono"
           />
         </div>
         <div>
-          <label className="text-sm font-semibold">เปลี่ยนรหัสผ่าน</label>
+          <div className="label mb-1">เปลี่ยนรหัสผ่าน</div>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="(เว้นว่างไว้ถ้าไม่เปลี่ยน)"
-            className="w-full border-2 border-stone-200 rounded-xl p-2 mt-1"
+            className="field"
           />
         </div>
         <button
           onClick={save}
-          className="w-full bg-orange-600 text-white rounded-xl py-3 font-bold"
+          className="btn-primary w-full rounded-xl py-3.5 font-bold"
         >
           บันทึก
         </button>
-        {msg && <div className="text-center text-sm">{msg}</div>}
+        {msg && (
+          <div className="text-center text-sm text-stone-700 bg-amber-50 border border-amber-200 rounded-lg py-2 font-semibold">
+            {msg}
+          </div>
+        )}
       </div>
     </main>
   );

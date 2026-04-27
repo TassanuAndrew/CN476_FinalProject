@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
+import Icon from "@/components/Icon";
 
 interface Product {
   id: number;
@@ -24,21 +25,29 @@ export default function BuyNowPage() {
   }, []);
 
   return (
-    <main className="min-h-screen p-4 max-w-3xl mx-auto pb-24">
-      <header className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <Link href="/" className="text-orange-600 text-2xl mr-2">
-            ←
+    <main className="min-h-screen p-5 max-w-3xl mx-auto pb-24">
+      <header className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="w-11 h-11 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-soft active:scale-95"
+          >
+            <Icon name="back" size={22} />
           </Link>
-          <h1 className="text-2xl font-bold text-orange-700">🛒 ซื้อเลย!</h1>
+          <div>
+            <div className="text-xs font-semibold tracking-widest text-red-700 uppercase">
+              Order Now
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">ซื้อเลย</h1>
+          </div>
         </div>
         <Link
           href="/cart"
-          className="relative bg-orange-600 text-white p-3 rounded-full"
+          className="relative btn-dark rounded-2xl w-12 h-12 flex items-center justify-center text-2xl"
         >
-          🛒
+          <span>🛒</span>
           {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
+            <span className="absolute -top-1.5 -right-1.5 bg-yellow-400 text-stone-900 text-xs rounded-full min-w-6 h-6 px-1.5 flex items-center justify-center font-extrabold ring-2 ring-white">
               {cartCount}
             </span>
           )}
@@ -53,28 +62,34 @@ export default function BuyNowPage() {
               key={p.id}
               disabled={out}
               onClick={() => setSelected(p)}
-              className={`bg-white rounded-2xl shadow p-3 text-left transition relative ${
-                out ? "opacity-40 grayscale" : "active:scale-95"
+              className={`card p-3 text-left transition relative ${
+                out ? "opacity-50 grayscale" : "active:scale-[0.97]"
               }`}
             >
-              <div className="aspect-square bg-orange-100 rounded-xl mb-2 flex items-center justify-center overflow-hidden">
-                {p.imageUrl ? (
+              <div className="aspect-square bg-gradient-to-br from-amber-100 to-red-200 rounded-2xl mb-3 overflow-hidden border border-amber-100">
+                {p.imageUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-4xl">🍜</span>
+                  <img
+                    src={p.imageUrl}
+                    alt={p.name}
+                    className="w-full h-full object-cover"
+                  />
                 )}
               </div>
-              <div className="font-semibold text-stone-800 text-sm leading-tight">
+              <div className="font-semibold text-stone-900 text-sm leading-tight line-clamp-2 min-h-[2.5em]">
                 {p.name}
               </div>
-              <div className="flex justify-between items-center mt-1">
-                <div className="text-orange-600 font-bold">{p.price}฿</div>
-                <div className="text-xs text-stone-500">เหลือ {p.stock}</div>
+              <div className="flex justify-between items-end mt-1">
+                <div className="text-orange-700 font-extrabold text-lg leading-none">
+                  ฿{p.price.toLocaleString()}
+                </div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-stone-400">
+                  เหลือ {p.stock}
+                </div>
               </div>
               {out && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="bg-red-500 text-white px-3 py-1 rounded-full font-bold text-sm">
+                  <span className="bg-stone-900 text-white px-3 py-1 rounded-full font-bold text-xs uppercase tracking-wider">
                     หมด
                   </span>
                 </div>
@@ -112,7 +127,6 @@ function BuyModal({ product, onClose }: { product: Product; onClose: () => void 
 
   async function buyNow() {
     setSubmitting(true);
-    // include cart items + this product
     const cartItems = cart.items.map((i) => ({
       productId: i.productId,
       quantity: i.quantity,
@@ -123,7 +137,6 @@ function BuyModal({ product, onClose }: { product: Product; onClose: () => void 
     } else {
       cartItems.push({ productId: product.id, quantity: qty });
     }
-
     const res = await fetch("/api/orders/buynow", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -140,23 +153,36 @@ function BuyModal({ product, onClose }: { product: Product; onClose: () => void 
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-2">
-      <div className="bg-white rounded-2xl w-full max-w-md">
-        <div className="p-4 border-b">
-          <div className="font-bold text-lg">{product.name}</div>
-          <div className="text-orange-600 font-bold">{product.price}฿ / ชิ้น</div>
-          <div className="text-xs text-stone-500">สต็อก: {product.stock}</div>
+    <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-2">
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-deep">
+        <div className="p-5 border-b border-stone-100 flex items-start justify-between">
+          <div>
+            <div className="text-xs font-semibold tracking-widest text-red-700 uppercase">
+              Order Now
+            </div>
+            <div className="font-bold text-lg leading-tight">{product.name}</div>
+            <div className="text-orange-700 font-extrabold text-xl mt-1">
+              ฿{product.price}{" "}
+              <span className="text-xs font-medium text-stone-500">/ ชิ้น · สต็อก {product.stock}</span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center"
+          >
+            <Icon name="close" size={20} />
+          </button>
         </div>
 
-        <div className="p-4 space-y-3">
+        <div className="p-5 space-y-4">
           <div>
-            <label className="text-sm font-semibold">จำนวน</label>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="label">จำนวน</div>
+            <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={() => setQty(Math.max(1, qty - 1))}
-                className="w-12 h-12 rounded-xl border-2 border-stone-200 text-2xl font-bold"
+                className="w-12 h-12 rounded-xl bg-white border-2 border-stone-200 flex items-center justify-center active:scale-95"
               >
-                −
+                <Icon name="minus" size={20} strokeWidth={3} />
               </button>
               <input
                 type="number"
@@ -166,47 +192,49 @@ function BuyModal({ product, onClose }: { product: Product; onClose: () => void 
                 onChange={(e) =>
                   setQty(Math.min(product.stock, Math.max(1, Number(e.target.value))))
                 }
-                className="flex-1 border-2 border-stone-200 rounded-xl p-3 text-center text-xl font-bold"
+                className="field flex-1 text-center text-xl font-extrabold"
               />
               <button
                 onClick={() => setQty(Math.min(product.stock, qty + 1))}
-                className="w-12 h-12 rounded-xl border-2 border-stone-200 text-2xl font-bold"
+                className="w-12 h-12 rounded-xl bg-white border-2 border-stone-200 flex items-center justify-center active:scale-95"
               >
-                +
+                <Icon name="plus" size={20} strokeWidth={3} />
               </button>
             </div>
           </div>
-          <div className="bg-orange-50 rounded-xl p-3 text-center">
-            <div className="text-stone-600 text-sm">ราคารวม</div>
-            <div className="text-2xl font-bold text-orange-600">
-              {total.toLocaleString()}฿
+          <div className="rounded-2xl p-4 text-center bg-gradient-to-br from-amber-100 via-orange-100 to-red-100 border border-amber-200">
+            <div className="text-stone-600 text-xs font-semibold tracking-wider uppercase">
+              ราคารวม
+            </div>
+            <div className="text-3xl font-black text-orange-700 mt-1">
+              ฿{total.toLocaleString()}
             </div>
           </div>
         </div>
 
         {!confirming ? (
-          <div className="p-4 border-t grid grid-cols-3 gap-2">
+          <div className="p-4 border-t border-stone-100 grid grid-cols-3 gap-2">
             <button
               onClick={onClose}
-              className="border-2 border-stone-300 rounded-xl py-3 font-semibold text-sm"
+              className="btn-ghost rounded-xl py-3 font-semibold text-sm"
             >
               ยกเลิก
             </button>
             <button
               onClick={addToCart}
-              className="bg-amber-500 text-white rounded-xl py-3 font-bold text-sm"
+              className="btn-amber rounded-xl py-3 font-bold text-sm"
             >
               + ตะกร้า
             </button>
             <button
               onClick={() => setConfirming(true)}
-              className="bg-orange-600 text-white rounded-xl py-3 font-bold text-sm"
+              className="btn-primary rounded-xl py-3 font-bold text-sm"
             >
-              ซื้อเลย!
+              ซื้อเลย
             </button>
           </div>
         ) : (
-          <div className="p-4 border-t">
+          <div className="p-4 border-t border-stone-100">
             <div className="text-center mb-3 font-semibold">
               ยืนยันการสั่งซื้อใช่ไหม?
             </div>
@@ -214,14 +242,14 @@ function BuyModal({ product, onClose }: { product: Product; onClose: () => void 
               <button
                 onClick={() => setConfirming(false)}
                 disabled={submitting}
-                className="border-2 border-stone-300 rounded-xl py-3 font-semibold"
+                className="btn-ghost rounded-xl py-3 font-semibold"
               >
                 ไม่
               </button>
               <button
                 onClick={buyNow}
                 disabled={submitting}
-                className="bg-orange-600 text-white rounded-xl py-3 font-bold disabled:opacity-50"
+                className="btn-primary rounded-xl py-3 font-bold disabled:opacity-50"
               >
                 {submitting ? "กำลังส่ง..." : "ใช่"}
               </button>

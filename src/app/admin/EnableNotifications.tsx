@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 
 function urlB64ToUint8(s: string): Uint8Array<ArrayBuffer> {
   const pad = "=".repeat((4 - (s.length % 4)) % 4);
@@ -12,7 +13,9 @@ function urlB64ToUint8(s: string): Uint8Array<ArrayBuffer> {
 }
 
 export default function EnableNotifications() {
-  const [status, setStatus] = useState<"idle" | "ok" | "blocked" | "unsupported">("idle");
+  const [status, setStatus] = useState<"idle" | "ok" | "blocked" | "unsupported">(
+    "idle"
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -59,9 +62,11 @@ export default function EnableNotifications() {
   if (status === "ok") return null;
 
   return (
-    <div className="bg-yellow-100 border-2 border-yellow-300 rounded-xl p-3 mb-3 flex items-center gap-2">
-      <div className="text-2xl">🔔</div>
-      <div className="flex-1 text-sm">
+    <div className="rounded-2xl p-4 mb-4 flex items-center gap-3 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 shadow-soft">
+      <div className="w-10 h-10 rounded-xl bg-stone-900 text-amber-300 flex items-center justify-center flex-shrink-0">
+        <Icon name="bell" size={20} />
+      </div>
+      <div className="flex-1 text-sm font-medium text-stone-800">
         {status === "blocked"
           ? "การแจ้งเตือนถูกปิด — เปิดในตั้งค่าเบราว์เซอร์"
           : status === "unsupported"
@@ -71,7 +76,7 @@ export default function EnableNotifications() {
       {status === "idle" && (
         <button
           onClick={enable}
-          className="bg-orange-600 text-white px-3 py-2 rounded-lg font-bold text-sm"
+          className="btn-primary px-4 py-2 rounded-lg font-bold text-sm"
         >
           เปิด
         </button>

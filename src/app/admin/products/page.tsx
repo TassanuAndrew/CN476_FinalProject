@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 
 interface Product {
   id: number;
@@ -53,68 +54,83 @@ export default function AdminProducts() {
   }
 
   return (
-    <main className="p-3 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-xl font-bold">จัดการสินค้า</h1>
+    <main className="p-4 max-w-5xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <div className="text-xs font-semibold tracking-widest text-red-700 uppercase">
+            Inventory
+          </div>
+          <h1 className="text-2xl font-black tracking-tight">จัดการสินค้า</h1>
+        </div>
         <button
           onClick={() =>
             setEditing({ name: "", price: 0, stock: 0, imageUrl: "", active: true })
           }
-          className="bg-orange-600 text-white px-3 py-2 rounded-lg font-bold text-sm"
+          className="btn-primary px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1.5"
         >
-          + เพิ่มสินค้า
+          <Icon name="plus" size={16} strokeWidth={3} />
+          เพิ่มสินค้า
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow divide-y">
+      <div className="card divide-y divide-stone-100 overflow-hidden">
         {products.map((p) => (
-          <div key={p.id} className="p-3 flex items-center gap-3">
-            <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-              {p.imageUrl ? (
+          <div key={p.id} className="p-4 flex items-center gap-3">
+            <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-red-200 rounded-xl flex-shrink-0 overflow-hidden">
+              {p.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl">🍜</span>
+                <img
+                  src={p.imageUrl}
+                  alt={p.name}
+                  className="w-full h-full object-cover"
+                />
               )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold truncate">{p.name}</div>
-              <div className="text-sm text-orange-600 font-bold">{p.price}฿</div>
-              <div className="text-xs text-stone-500 flex items-center gap-1">
-                สต็อก:
+              <div className="text-orange-700 font-extrabold">
+                ฿{p.price.toLocaleString()}
+              </div>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-[11px] uppercase tracking-wider text-stone-500 font-semibold">
+                  สต็อก
+                </span>
                 <button
                   onClick={() => quickStock(p, -1)}
-                  className="px-2 bg-stone-200 rounded"
+                  className="w-6 h-6 rounded bg-stone-100 flex items-center justify-center"
                 >
-                  −
+                  <Icon name="minus" size={12} strokeWidth={3} />
                 </button>
-                <span className="font-bold text-stone-700">{p.stock}</span>
+                <span className="font-extrabold text-stone-800 min-w-6 text-center">
+                  {p.stock}
+                </span>
                 <button
                   onClick={() => quickStock(p, 1)}
-                  className="px-2 bg-stone-200 rounded"
+                  className="w-6 h-6 rounded bg-stone-100 flex items-center justify-center"
                 >
-                  +
+                  <Icon name="plus" size={12} strokeWidth={3} />
                 </button>
                 <button
                   onClick={() => quickStock(p, 10)}
-                  className="px-2 bg-orange-100 rounded text-orange-700"
+                  className="px-2 h-6 rounded bg-amber-100 text-amber-800 text-[11px] font-bold"
                 >
                   +10
                 </button>
               </div>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <button
                 onClick={() => setEditing(p)}
-                className="bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                className="btn-dark text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1"
               >
+                <Icon name="edit" size={14} />
                 แก้
               </button>
               <button
                 onClick={() => del(p.id)}
-                className="bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                className="btn-ghost text-xs font-bold px-3 py-2 rounded-lg text-red-700"
               >
-                ลบ
+                <Icon name="trash" size={14} />
               </button>
             </div>
           </div>
@@ -122,67 +138,77 @@ export default function AdminProducts() {
       </div>
 
       {editing && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
-          <div className="bg-white rounded-2xl w-full max-w-sm">
-            <div className="p-4 border-b font-bold">
-              {editing.id ? "แก้ไขสินค้า" : "เพิ่มสินค้า"}
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-3">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-deep">
+            <div className="p-5 border-b border-stone-100 flex items-center justify-between">
+              <div className="font-black text-lg">
+                {editing.id ? "แก้ไขสินค้า" : "เพิ่มสินค้า"}
+              </div>
+              <button
+                onClick={() => setEditing(null)}
+                className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center"
+              >
+                <Icon name="close" size={20} />
+              </button>
             </div>
-            <div className="p-4 space-y-3">
+            <div className="p-5 space-y-3">
               <div>
-                <label className="text-sm font-semibold">ชื่อ</label>
+                <div className="label mb-1">ชื่อ</div>
                 <input
                   value={editing.name || ""}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                  className="w-full border-2 border-stone-200 rounded-xl p-2 mt-1"
+                  className="field"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-sm font-semibold">ราคา (฿)</label>
+                  <div className="label mb-1">ราคา (฿)</div>
                   <input
                     type="number"
                     value={editing.price ?? 0}
                     onChange={(e) =>
                       setEditing({ ...editing, price: Number(e.target.value) })
                     }
-                    className="w-full border-2 border-stone-200 rounded-xl p-2 mt-1"
+                    className="field"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold">สต็อก</label>
+                  <div className="label mb-1">สต็อก</div>
                   <input
                     type="number"
                     value={editing.stock ?? 0}
                     onChange={(e) =>
                       setEditing({ ...editing, stock: Number(e.target.value) })
                     }
-                    className="w-full border-2 border-stone-200 rounded-xl p-2 mt-1"
+                    className="field"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-semibold">URL รูปภาพ</label>
+                <div className="label mb-1">URL รูปภาพ</div>
                 <input
                   value={editing.imageUrl || ""}
-                  onChange={(e) => setEditing({ ...editing, imageUrl: e.target.value })}
+                  onChange={(e) =>
+                    setEditing({ ...editing, imageUrl: e.target.value })
+                  }
                   placeholder="https://..."
-                  className="w-full border-2 border-stone-200 rounded-xl p-2 mt-1"
+                  className="field"
                 />
-                <div className="text-xs text-stone-400 mt-1">
+                <div className="text-xs text-stone-400 mt-1.5">
                   อัปโหลดรูปฟรีที่ imgur.com / cloudinary.com แล้วก็อปลิงก์มาวาง
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t flex gap-2">
+            <div className="p-4 border-t border-stone-100 flex gap-2">
               <button
                 onClick={() => setEditing(null)}
-                className="flex-1 border-2 border-stone-300 rounded-xl py-2 font-semibold"
+                className="btn-ghost flex-1 rounded-xl py-3 font-semibold"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={save}
-                className="flex-1 bg-orange-600 text-white rounded-xl py-2 font-bold"
+                className="btn-primary flex-1 rounded-xl py-3 font-bold"
               >
                 บันทึก
               </button>

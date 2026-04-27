@@ -43,36 +43,58 @@ export default function PaymentPage() {
   if (error)
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
-        <div className="bg-white p-6 rounded-2xl text-center">
-          <div className="text-5xl mb-3">⚠️</div>
-          <p>{error}</p>
+        <div className="card p-6 text-center max-w-sm">
+          <div className="font-bold text-lg text-red-700">เกิดข้อผิดพลาด</div>
+          <p className="text-stone-500 mt-1">{error}</p>
         </div>
       </main>
     );
 
   if (!data)
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div>กำลังสร้าง QR...</div>
+      <main className="min-h-screen flex items-center justify-center text-stone-500">
+        กำลังสร้าง QR...
       </main>
     );
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="bg-white rounded-3xl p-6 shadow-xl max-w-sm w-full text-center">
-        <div className="text-orange-600 font-bold text-lg">{data.shopName}</div>
-        <div className="text-sm text-stone-500 mb-3">PromptPay</div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={data.qr} alt="PromptPay QR" className="w-full" />
-        <div className="text-stone-600 text-sm mt-2">{data.promptpay}</div>
-        <div className="text-3xl font-bold text-orange-600 mt-3">
-          {data.amount.toLocaleString()} ฿
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-3">
+          <div className="text-xs font-semibold tracking-widest text-red-700 uppercase">
+            Scan to Pay
+          </div>
+          <h1 className="text-2xl font-black tracking-tight mt-1">{data.shopName}</h1>
         </div>
-        <p className="text-sm text-stone-500 mt-4">
-          สแกนเพื่อชำระเงิน รอเจ้าของร้านยืนยัน
+
+        <div className="card overflow-hidden">
+          <div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-400 text-white text-center py-3 font-bold tracking-widest text-sm uppercase">
+            PromptPay
+          </div>
+          <div className="p-5">
+            <div className="bg-white rounded-2xl p-3 border border-stone-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={data.qr} alt="PromptPay QR" className="w-full" />
+            </div>
+            <div className="text-center text-stone-500 text-sm mt-3 font-mono">
+              {data.promptpay}
+            </div>
+            <div className="mt-4 rounded-2xl bg-stone-900 text-white text-center py-4">
+              <div className="text-xs uppercase tracking-widest opacity-60">
+                ยอดที่ต้องชำระ
+              </div>
+              <div className="text-4xl font-black mt-0.5">
+                ฿{data.amount.toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-center text-sm text-stone-500 mt-4">
+          สแกนเพื่อชำระเงิน · รอเจ้าของร้านยืนยัน
         </p>
-        <p className="text-xs text-stone-400 mt-2">
-          (ออเดอร์จะหมดอายุภายใน 1 ชั่วโมง)
+        <p className="text-center text-xs text-stone-400 mt-1">
+          ออเดอร์จะหมดอายุภายใน 1 ชั่วโมง
         </p>
       </div>
     </main>

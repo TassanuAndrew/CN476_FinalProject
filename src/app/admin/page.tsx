@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import EnableNotifications from "./EnableNotifications";
+import Icon from "@/components/Icon";
 
 function playDing() {
   try {
@@ -58,15 +59,12 @@ export default function AdminDashboard() {
     const res = await fetch("/api/admin/orders");
     if (!res.ok) return;
     const data: Order[] = await res.json();
-
-    // detect new pending orders → ding
     const newPending = data.filter((o) => o.status === "PENDING");
     const currentIds = new Set(newPending.map((o) => o.id));
     const isNew = [...currentIds].some((id) => !prevPendingIds.current.has(id));
     if (isNew && initialized.current) playDing();
     prevPendingIds.current = currentIds;
     initialized.current = true;
-
     setOrders(data);
   }, []);
 
@@ -77,9 +75,7 @@ export default function AdminDashboard() {
   }, [load]);
 
   const incoming = orders.filter((o) => o.status === "PENDING");
-  const active = orders.filter(
-    (o) => o.status === "ACCEPTED" || o.status === "PAID"
-  );
+  const active = orders.filter((o) => o.status === "ACCEPTED" || o.status === "PAID");
   const cancelled = orders.filter(
     (o) => o.status === "CANCELLED" || o.status === "EXPIRED"
   );
@@ -105,53 +101,59 @@ export default function AdminDashboard() {
     load();
   }
 
-  const list =
-    tab === "INCOMING" ? incoming : tab === "ACTIVE" ? active : cancelled;
+  const list = tab === "INCOMING" ? incoming : tab === "ACTIVE" ? active : cancelled;
 
   return (
-    <main className="p-3 max-w-5xl mx-auto">
+    <main className="p-4 max-w-5xl mx-auto">
       <EnableNotifications />
 
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <TabBtn active={tab === "INCOMING"} onClick={() => setTab("INCOMING")}>
-          🔔 ออเดอร์เข้า
-          {incoming.length > 0 && (
-            <span className="ml-1 bg-red-500 text-white rounded-full px-2 text-xs">
-              {incoming.length}
-            </span>
-          )}
-        </TabBtn>
-        <TabBtn active={tab === "ACTIVE"} onClick={() => setTab("ACTIVE")}>
-          📦 ออเดอร์สินค้า
-        </TabBtn>
-        <TabBtn active={tab === "CANCELLED"} onClick={() => setTab("CANCELLED")}>
-          ❌ ยกเลิก
-        </TabBtn>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <TabBtn
+          active={tab === "INCOMING"}
+          onClick={() => setTab("INCOMING")}
+          label="ออเดอร์เข้า"
+          count={incoming.length}
+          accent
+        />
+        <TabBtn
+          active={tab === "ACTIVE"}
+          onClick={() => setTab("ACTIVE")}
+          label="ออเดอร์สินค้า"
+          count={active.length}
+        />
+        <TabBtn
+          active={tab === "CANCELLED"}
+          onClick={() => setTab("CANCELLED")}
+          label="ยกเลิก"
+          count={cancelled.length}
+        />
       </div>
 
-      <div className="bg-white rounded-2xl shadow overflow-hidden">
+      <div className="card overflow-hidden">
         {list.length === 0 ? (
-          <div className="p-8 text-center text-stone-400">- ไม่มีออเดอร์ -</div>
+          <div className="p-12 text-center text-stone-400 font-medium">
+            — ไม่มีออเดอร์ —
+          </div>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y divide-stone-100">
             {list.map((o) => (
-              <li key={o.id} className="p-3 flex items-start gap-3">
+              <li key={o.id} className="p-4 flex items-start gap-3">
                 <button
                   onClick={() => setViewing(o)}
                   className="flex-1 text-left min-w-0"
                 >
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                         o.type === "BUYNOW"
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-amber-100 text-amber-700"
+                          ? "bg-red-600 text-white"
+                          : "bg-amber-400 text-stone-900"
                       }`}
                     >
-                      {o.type === "BUYNOW" ? "ซื้อเลย!" : "สั่งล่วงหน้า"}
+                      {o.type === "BUYNOW" ? "ซื้อเลย" : "สั่งล่วงหน้า"}
                     </span>
-                    <span className="text-xs text-stone-500">#{o.id}</span>
-                    <span className="text-xs text-stone-500">
+                    <span className="text-xs text-stone-400 font-mono">#{o.id}</span>
+                    <span className="text-xs text-stone-400">
                       {new Date(o.createdAt).toLocaleString("th-TH", {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -160,71 +162,77 @@ export default function AdminDashboard() {
                       })}
                     </span>
                     {o.status === "PAID" && (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
-                        ✅ จ่ายแล้ว
+                      <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        จ่ายแล้ว
                       </span>
                     )}
                     {o.status === "ACCEPTED" && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                      <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                         รอชำระ
                       </span>
                     )}
                     {o.status === "EXPIRED" && (
-                      <span className="text-xs bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] bg-stone-200 text-stone-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                         หมดเวลา
                       </span>
                     )}
                   </div>
-                  <div className="text-sm mt-1 truncate">
-                    {o.items.map((i) => `${i.productName} x${i.quantity}`).join(", ")}
+                  <div className="text-sm mt-1.5 truncate font-medium text-stone-700">
+                    {o.items.map((i) => `${i.productName} ×${i.quantity}`).join(", ")}
                   </div>
-                  <div className="text-xs text-stone-500">
-                    {o.customerName || "-"} {o.customerPhone || ""}
+                  <div className="text-xs text-stone-500 mt-0.5">
+                    {o.customerName || "—"}{" "}
+                    {o.customerPhone && (
+                      <span className="font-mono">· {o.customerPhone}</span>
+                    )}
                   </div>
-                  <div className="font-bold text-orange-600 mt-1">
-                    {o.totalPrice.toLocaleString()}฿
+                  <div className="font-extrabold text-orange-700 text-lg mt-1">
+                    ฿{o.totalPrice.toLocaleString()}
                   </div>
                 </button>
 
-                <div className="flex flex-col gap-1 flex-shrink-0">
+                <div className="flex flex-col gap-1.5 flex-shrink-0">
                   {tab === "INCOMING" && (
                     <>
                       <button
                         onClick={() => accept(o.id)}
-                        className="bg-green-600 text-white text-xs font-bold px-3 py-2 rounded-lg"
+                        className="btn-primary text-xs font-bold px-3 py-2 rounded-lg"
                       >
                         รับ
                       </button>
                       <button
                         onClick={() => cancel(o.id)}
-                        className="bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg"
+                        className="btn-ghost text-xs font-bold px-3 py-2 rounded-lg text-red-700"
                       >
                         ยกเลิก
                       </button>
                     </>
                   )}
-                  {tab === "ACTIVE" && o.type === "BUYNOW" && o.status === "ACCEPTED" && (
-                    <button
-                      onClick={() => confirmPay(o.id)}
-                      className="bg-green-600 text-white text-xs font-bold px-3 py-2 rounded-lg"
-                    >
-                      💰 รับเงิน
-                    </button>
-                  )}
+                  {tab === "ACTIVE" &&
+                    o.type === "BUYNOW" &&
+                    o.status === "ACCEPTED" && (
+                      <button
+                        onClick={() => confirmPay(o.id)}
+                        className="btn-primary text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1"
+                      >
+                        <Icon name="wallet" size={14} />
+                        รับเงิน
+                      </button>
+                    )}
                   {tab === "ACTIVE" && (
                     <button
                       onClick={() => del(o.id)}
-                      className="bg-stone-200 text-xs font-bold px-3 py-2 rounded-lg"
+                      className="btn-ghost text-xs font-bold px-3 py-2 rounded-lg text-stone-500"
                     >
-                      ลบ
+                      <Icon name="trash" size={14} />
                     </button>
                   )}
                   {tab === "CANCELLED" && (
                     <button
                       onClick={() => del(o.id)}
-                      className="bg-stone-200 text-xs font-bold px-3 py-2 rounded-lg"
+                      className="btn-ghost text-xs font-bold px-3 py-2 rounded-lg text-stone-500"
                     >
-                      ลบ
+                      <Icon name="trash" size={14} />
                     </button>
                   )}
                 </div>
@@ -242,44 +250,70 @@ export default function AdminDashboard() {
 }
 
 function TabBtn({
-  children,
+  label,
+  count,
   active,
   onClick,
+  accent,
 }: {
-  children: React.ReactNode;
+  label: string;
+  count?: number;
   active: boolean;
   onClick: () => void;
+  accent?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`py-2 rounded-xl font-bold text-sm ${
-        active ? "bg-orange-600 text-white" : "bg-white text-stone-700"
+      className={`py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 ${
+        active
+          ? accent
+            ? "btn-primary"
+            : "btn-dark"
+          : "bg-white text-stone-700 border border-stone-200 shadow-soft"
       }`}
     >
-      {children}
+      <span>{label}</span>
+      {count !== undefined && count > 0 && (
+        <span
+          className={`text-[10px] rounded-full min-w-5 h-5 px-1.5 inline-flex items-center justify-center font-extrabold ${
+            active
+              ? "bg-white/25 text-white"
+              : accent
+              ? "bg-red-600 text-white"
+              : "bg-stone-900 text-white"
+          }`}
+        >
+          {count}
+        </span>
+      )}
     </button>
   );
 }
 
 function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto">
-        <div className="p-4 border-b flex items-center justify-between">
+    <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-auto shadow-deep">
+        <div className="p-5 border-b border-stone-100 flex items-start justify-between">
           <div>
-            <div className="font-bold">ออเดอร์ #{order.id}</div>
-            <div className="text-sm text-stone-500">
-              {order.type === "BUYNOW" ? "🛒 ซื้อเลย!" : "📦 สั่งล่วงหน้า"}
+            <div className="text-xs font-semibold tracking-widest uppercase text-orange-700">
+              {order.type === "BUYNOW" ? "Order Now" : "Pre-order"}
+            </div>
+            <div className="font-black text-xl tracking-tight">
+              ออเดอร์ <span className="font-mono">#{order.id}</span>
             </div>
           </div>
-          <button onClick={onClose} className="text-2xl text-stone-500 px-2">
-            ×
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center"
+          >
+            <Icon name="close" size={20} />
           </button>
         </div>
-        <div className="p-4 space-y-3">
-          <Field label="ชื่อ">{order.customerName || "-"}</Field>
-          <Field label="เบอร์">{order.customerPhone || "-"}</Field>
+        <div className="p-5 space-y-3">
+          <Field label="ชื่อ">{order.customerName || "—"}</Field>
+          <Field label="เบอร์">{order.customerPhone || "—"}</Field>
           {order.type === "PREORDER" && (
             <>
               <Field label="รับสินค้า">
@@ -287,30 +321,34 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
                   ? "🏠 รับเอง"
                   : order.deliveryType === "DELIVERY"
                   ? "🛵 ส่งถึงที่"
-                  : "-"}
+                  : "—"}
               </Field>
-              <Field label="วันนัด">{order.pickupDateText || "-"}</Field>
+              <Field label="วันนัด">{order.pickupDateText || "—"}</Field>
               <Field label="รายละเอียด">
-                <div className="whitespace-pre-wrap">{order.deliveryDetail || "-"}</div>
+                <div className="whitespace-pre-wrap">
+                  {order.deliveryDetail || "—"}
+                </div>
               </Field>
             </>
           )}
           <div>
-            <div className="text-xs text-stone-500 font-semibold mb-1">รายการ</div>
-            <ul className="bg-orange-50 rounded-xl p-3 space-y-1">
+            <div className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold mb-1.5">
+              รายการ
+            </div>
+            <ul className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 p-4 space-y-1.5">
               {order.items.map((i) => (
                 <li key={i.id} className="flex justify-between">
                   <span>
-                    {i.productName} × {i.quantity}
+                    {i.productName} <span className="text-stone-400">×{i.quantity}</span>
                   </span>
                   <span className="font-semibold">
-                    {(i.priceAtOrder * i.quantity).toLocaleString()}฿
+                    ฿{(i.priceAtOrder * i.quantity).toLocaleString()}
                   </span>
                 </li>
               ))}
-              <li className="flex justify-between border-t pt-1 font-bold text-orange-700">
+              <li className="flex justify-between border-t border-amber-200 pt-2 font-extrabold text-orange-700">
                 <span>รวม</span>
-                <span>{order.totalPrice.toLocaleString()}฿</span>
+                <span>฿{order.totalPrice.toLocaleString()}</span>
               </li>
             </ul>
           </div>
@@ -323,8 +361,10 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-xs text-stone-500 font-semibold">{label}</div>
-      <div>{children}</div>
+      <div className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold">
+        {label}
+      </div>
+      <div className="mt-0.5">{children}</div>
     </div>
   );
 }

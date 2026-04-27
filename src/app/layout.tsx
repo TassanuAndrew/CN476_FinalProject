@@ -5,7 +5,26 @@ export const metadata: Metadata = {
   title: "บ้านขนมจีน",
   description: "สั่งขนมจีนออนไลน์",
   manifest: "/manifest.json",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "บ้านขนมจีน",
+    statusBarStyle: "default",
+  },
+  openGraph: {
+    title: "บ้านขนมจีน",
+    description: "สั่งขนมจีนออนไลน์ ส่งถึงบ้าน",
+    images: ["/icon-512.png"],
+    locale: "th_TH",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

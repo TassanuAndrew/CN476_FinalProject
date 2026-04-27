@@ -29,6 +29,7 @@ export async function sendPushToAdmins(payload: PushPayload) {
   const subs = await prisma.pushSubscription.findMany();
   const data = JSON.stringify(payload);
 
+  console.log(`[push] sending to ${subs.length} subscribers`);
   await Promise.all(
     subs.map(async (s) => {
       try {
@@ -39,8 +40,12 @@ export async function sendPushToAdmins(payload: PushPayload) {
           },
           data
         );
+        console.log(`[push] OK -> ${s.endpoint.slice(0, 60)}...`);
       } catch (e: unknown) {
-        const err = e as { statusCode?: number };
+        const err = e as { statusCode?: number; body?: string };
+        console.error(
+          `[push] FAIL ${err.statusCode} ${err.body} -> ${s.endpoint.slice(0, 60)}...`
+        );
         if (err.statusCode === 404 || err.statusCode === 410) {
           await prisma.pushSubscription.delete({ where: { id: s.id } }).catch(() => {});
         }

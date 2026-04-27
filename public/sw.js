@@ -13,8 +13,8 @@ self.addEventListener("push", (event) => {
 
   const opts = {
     body: data.body || "",
-    icon: "/icon.svg",
-    badge: "/icon.svg",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
     vibrate: [200, 100, 200, 100, 400],
     tag: data.tag,
     renotify: true,

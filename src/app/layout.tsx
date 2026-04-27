@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://kanomjeen-bannongbo.vercel.app"),
   title: "บ้านขนมจีน",
-  description: "สั่งขนมจีนออนไลน์",
+  description: "สั่งขนมจีนออนไลน์ ส่งถึงบ้าน",
   manifest: "/manifest.json",
   icons: {
     icon: [

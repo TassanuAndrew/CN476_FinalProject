@@ -10,40 +10,40 @@ from an installable mobile dashboard with push-notification alerts.
 
 ---
 
-## ✨ Features
+## Features
 
 ### Customer side
 
-- 🛒 **Two ordering modes**
+- **Two ordering modes**
   - **ซื้อเลย!** — order now, pay immediately via PromptPay QR
   - **สั่งล่วงหน้า** — schedule pickup or delivery, pay on receipt
-- 🛍️ Persistent cart per mode (separate carts)
-- 📱 Installable PWA — works offline-capable, looks native on iOS/Android
-- 📜 Order history lookup by phone number
-- 🎯 Auto-redirects to payment QR when admin accepts
+- Persistent cart per mode (separate carts)
+- Installable PWA — works offline-capable, looks native on iOS/Android
+- Order history lookup by phone number
+- Auto-redirects to payment QR when admin accepts
 
 ### Admin side
 
-- 📋 Live order dashboard (3-second polling, auto-refresh)
-- 🔔 Web Push notifications for new orders (works on iOS PWA after install)
-- 🔉 In-app "ding" sound when a new order arrives while dashboard is open
-- 💰 Accept / Cancel / Confirm-payment workflow
-- 📦 Product CRUD with image upload to Supabase Storage
-- 🖨️ Print receipt
-- 📊 Sales dashboard (today / month revenue, top items)
-- ⚙️ Settings: change password, set shop PromptPay phone
+- Live order dashboard (3-second polling, auto-refresh)
+- Web Push notifications for new orders (works on iOS PWA after install)
+- In-app "ding" sound when a new order arrives while dashboard is open
+- Accept / Cancel / Confirm-payment workflow
+- Product CRUD with image upload to Supabase Storage
+- Print receipt
+- Sales dashboard (today / month revenue, top items)
+- Settings: change password, set shop PromptPay phone
 
 ### Production-grade backend
 
-- 🔐 JWT admin auth via httpOnly cookies + Next.js middleware
-- 🛡️ Per-IP rate limiting on order create + admin login
-- ✅ Centralised input validation (size limits, type checks, sanitisation)
-- 🌐 Vercel function region pinned to `syd1` (same as DB)
-- 🗑️ Soft-delete for products with order history (FK-safe)
+- JWT admin auth via httpOnly cookies + Next.js middleware
+- Per-IP rate limiting on order create + admin login
+- Centralised input validation (size limits, type checks, sanitisation)
+- Vercel function region pinned to `syd1` (same as DB)
+- Soft-delete for products with order history (FK-safe)
 
 ---
 
-## 🧱 Tech stack
+## Tech stack
 
 | Layer | Tech |
 |---|---|
@@ -61,7 +61,7 @@ from an installable mobile dashboard with push-notification alerts.
 
 ---
 
-## 🗺️ Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -174,7 +174,7 @@ stateDiagram-v2
 
 ---
 
-## 🚀 Local development
+## Local development
 
 ```bash
 # 1. Install
@@ -194,11 +194,11 @@ npm run dev
 Default admin login (created by seed):
 - username: `admin`
 - password: `admin1234`
-- ⚠️ **change immediately in `/admin/settings`**
+- **Change immediately in `/admin/settings`**
 
 ---
 
-## 🔑 Environment variables
+## Environment variables
 
 ```bash
 # Database
@@ -212,7 +212,7 @@ ADMIN_JWT_SECRET="..."
 VAPID_PUBLIC_KEY="B..."
 VAPID_PRIVATE_KEY="..."
 NEXT_PUBLIC_VAPID_PUBLIC_KEY="B..."   # must equal VAPID_PUBLIC_KEY
-VAPID_SUBJECT="https://your-domain.com"  # ⚠️ Apple requires real URL/email — no .local
+VAPID_SUBJECT="https://your-domain.com"  # Apple requires real URL/email — no .local
 
 # Initial admin (only used by seed script)
 ADMIN_USERNAME="admin"
@@ -226,7 +226,7 @@ SUPABASE_SERVICE_ROLE_KEY="eyJ..."   # service_role, NOT anon — server only
 
 ---
 
-## 📂 Project structure
+## Project structure
 
 ```
 src/
@@ -274,7 +274,7 @@ public/
 
 ---
 
-## 🔒 Security notes
+## Security notes
 
 - All `/api/admin/*` routes are guarded by middleware that verifies an
   httpOnly JWT cookie. The cookie is `secure` in production and `sameSite=lax`.
@@ -289,7 +289,7 @@ public/
 
 ---
 
-## 🧪 Manual test checklist
+## Manual test checklist
 
 - [ ] Place buynow order → admin accepts → pay via QR → marked PAID
 - [ ] Place preorder with pickup → admin accepts → no payment screen
@@ -303,6 +303,6 @@ public/
 
 ---
 
-## 📝 License
+## License
 
 Educational project. No commercial license.

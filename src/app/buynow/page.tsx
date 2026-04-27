@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
 import Icon from "@/components/Icon";
 
@@ -43,11 +42,11 @@ export default function BuyNowPage() {
         </div>
         <Link
           href="/cart"
-          className="relative btn-dark rounded-2xl w-12 h-12 flex items-center justify-center text-2xl"
+          className="relative bg-white border-2 border-stone-900 rounded-2xl w-12 h-12 flex items-center justify-center text-2xl shadow-soft active:scale-95"
         >
           <span>🛒</span>
           {cartCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-yellow-400 text-stone-900 text-xs rounded-full min-w-6 h-6 px-1.5 flex items-center justify-center font-extrabold ring-2 ring-white">
+            <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-xs rounded-full min-w-6 h-6 px-1.5 flex items-center justify-center font-extrabold ring-2 ring-white">
               {cartCount}
             </span>
           )}
@@ -105,10 +104,7 @@ export default function BuyNowPage() {
 }
 
 function BuyModal({ product, onClose }: { product: Product; onClose: () => void }) {
-  const router = useRouter();
   const [qty, setQty] = useState(1);
-  const [confirming, setConfirming] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const cart = useCart();
 
   const total = product.price * qty;
@@ -123,33 +119,6 @@ function BuyModal({ product, onClose }: { product: Product; onClose: () => void 
       quantity: qty,
     });
     onClose();
-  }
-
-  async function buyNow() {
-    setSubmitting(true);
-    const cartItems = cart.items.map((i) => ({
-      productId: i.productId,
-      quantity: i.quantity,
-    }));
-    const existing = cartItems.find((i) => i.productId === product.id);
-    if (existing) {
-      existing.quantity = Math.min(existing.quantity + qty, product.stock);
-    } else {
-      cartItems.push({ productId: product.id, quantity: qty });
-    }
-    const res = await fetch("/api/orders/buynow", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: cartItems }),
-    });
-    if (res.ok) {
-      const order = await res.json();
-      cart.clear();
-      router.push(`/order/${order.id}/waiting`);
-    } else {
-      alert((await res.json()).error || "เกิดข้อผิดพลาด");
-      setSubmitting(false);
-    }
   }
 
   return (
@@ -212,50 +181,36 @@ function BuyModal({ product, onClose }: { product: Product; onClose: () => void 
           </div>
         </div>
 
-        {!confirming ? (
-          <div className="p-4 border-t border-stone-100 grid grid-cols-3 gap-2">
-            <button
-              onClick={onClose}
-              className="btn-ghost rounded-xl py-3 font-semibold text-sm"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={addToCart}
-              className="btn-amber rounded-xl py-3 font-bold text-sm"
-            >
-              + ตะกร้า
-            </button>
-            <button
-              onClick={() => setConfirming(true)}
-              className="btn-primary rounded-xl py-3 font-bold text-sm"
-            >
-              ซื้อเลย
-            </button>
-          </div>
-        ) : (
-          <div className="p-4 border-t border-stone-100">
-            <div className="text-center mb-3 font-semibold">
-              ยืนยันการสั่งซื้อใช่ไหม?
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setConfirming(false)}
-                disabled={submitting}
-                className="btn-ghost rounded-xl py-3 font-semibold"
-              >
-                ไม่
-              </button>
-              <button
-                onClick={buyNow}
-                disabled={submitting}
-                className="btn-primary rounded-xl py-3 font-bold disabled:opacity-50"
-              >
-                {submitting ? "กำลังส่ง..." : "ใช่"}
-              </button>
-            </div>
-          </div>
-        )}
+        <div className="p-4 border-t border-stone-100 grid grid-cols-3 gap-2">
+          <button
+            onClick={onClose}
+            className="btn-ghost rounded-xl py-3 font-semibold text-sm"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={addToCart}
+            className="btn-amber rounded-xl py-3 font-bold text-sm"
+          >
+            + ตะกร้า
+          </button>
+          <Link
+            href="/cart"
+            onClick={() => {
+              cart.add({
+                productId: product.id,
+                name: product.name,
+                price: product.price,
+                imageUrl: product.imageUrl,
+                stock: product.stock,
+                quantity: qty,
+              });
+            }}
+            className="btn-primary rounded-xl py-3 font-bold text-sm flex items-center justify-center"
+          >
+            ซื้อเลย
+          </Link>
+        </div>
       </div>
     </div>
   );

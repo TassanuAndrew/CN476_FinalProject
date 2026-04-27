@@ -10,8 +10,11 @@ export default function Home() {
         <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-stone-900 leading-none">
           บ้านขนมจีน
         </h1>
-        <p className="mt-3 text-stone-500">เลือกรูปแบบการสั่งซื้อ</p>
       </header>
+
+      <p className="text-lg font-semibold text-stone-800 mb-3">
+        เลือกรูปแบบการสั่งซื้อ
+      </p>
 
       <div className="flex flex-col gap-4 w-full max-w-sm">
         <Link

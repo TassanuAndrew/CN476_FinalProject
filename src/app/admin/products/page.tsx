@@ -40,7 +40,11 @@ export default function AdminProducts() {
 
   async function del(id: number) {
     if (!confirm("ลบสินค้านี้?")) return;
-    await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      alert("ลบไม่สำเร็จ");
+      return;
+    }
     load();
   }
 

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePreorderCart } from "@/lib/preorderCart";
 import Icon from "@/components/Icon";
 
 interface Product {
@@ -15,6 +15,7 @@ interface Product {
 export default function PreOrderPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
+  const cartCount = usePreorderCart((s) => s.count());
 
   useEffect(() => {
     fetch("/api/products")
@@ -23,20 +24,33 @@ export default function PreOrderPage() {
   }, []);
 
   return (
-    <main className="min-h-screen p-5 max-w-3xl mx-auto pb-20">
-      <header className="flex items-center gap-3 mb-6">
-        <Link
-          href="/"
-          className="w-11 h-11 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-soft active:scale-95"
-        >
-          <Icon name="back" size={22} />
-        </Link>
-        <div>
-          <div className="text-xs font-semibold tracking-widest text-orange-700 uppercase">
-            Pre-order
+    <main className="min-h-screen p-5 max-w-3xl mx-auto pb-24">
+      <header className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="w-11 h-11 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-soft active:scale-95"
+          >
+            <Icon name="back" size={22} />
+          </Link>
+          <div>
+            <div className="text-xs font-semibold tracking-widest text-orange-700 uppercase">
+              Pre-order
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">สั่งล่วงหน้า</h1>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">สั่งล่วงหน้า</h1>
         </div>
+        <Link
+          href="/preorder/cart"
+          className="relative bg-white border-2 border-stone-900 rounded-2xl w-12 h-12 flex items-center justify-center text-2xl shadow-soft active:scale-95"
+        >
+          <span>🛒</span>
+          {cartCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-xs rounded-full min-w-6 h-6 px-1.5 flex items-center justify-center font-extrabold ring-2 ring-white">
+              {cartCount}
+            </span>
+          )}
+        </Link>
       </header>
 
       <div className="grid grid-cols-2 gap-3">
@@ -74,34 +88,28 @@ export default function PreOrderPage() {
 }
 
 function PreOrderModal({ product, onClose }: { product: Product; onClose: () => void }) {
-  const router = useRouter();
-  const [form, setForm] = useState({
-    deliveryType: "PICKUP",
-    quantity: 1,
-    deliveryDetail: "",
-    pickupDateText: "",
-    customerName: "",
-    customerPhone: "",
-  });
-  const [submitting, setSubmitting] = useState(false);
+  const [qty, setQty] = useState(1);
+  const cart = usePreorderCart();
 
-  async function submit() {
-    setSubmitting(true);
-    const res = await fetch("/api/orders/preorder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId: product.id, ...form }),
+  const total = product.price * qty;
+
+  function addToCart(redirect: boolean) {
+    cart.add({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      quantity: qty,
     });
-    if (res.ok) router.push("/preorder/done");
-    else {
-      alert((await res.json()).error || "เกิดข้อผิดพลาด");
-      setSubmitting(false);
+    onClose();
+    if (redirect) {
+      // redirect handled by Link below; this branch unused but kept for clarity
     }
   }
 
   return (
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-2">
-      <div className="bg-white rounded-3xl w-full max-w-md max-h-[92vh] overflow-auto shadow-deep">
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-deep">
         <div className="p-5 border-b border-stone-100 flex items-start justify-between">
           <div>
             <div className="text-xs font-semibold tracking-widest text-orange-700 uppercase">
@@ -109,7 +117,8 @@ function PreOrderModal({ product, onClose }: { product: Product; onClose: () => 
             </div>
             <div className="font-bold text-lg leading-tight">{product.name}</div>
             <div className="text-orange-700 font-extrabold text-xl mt-1">
-              ฿{product.price} <span className="text-xs font-medium text-stone-500">/ ชิ้น</span>
+              ฿{product.price}{" "}
+              <span className="text-xs font-medium text-stone-500">/ ชิ้น</span>
             </div>
           </div>
           <button
@@ -122,111 +131,67 @@ function PreOrderModal({ product, onClose }: { product: Product; onClose: () => 
 
         <div className="p-5 space-y-4">
           <div>
-            <div className="label">รับสินค้า</div>
-            <div className="flex gap-2 mt-2">
-              {[
-                { v: "PICKUP", emoji: "🏠", label: "รับเอง" },
-                { v: "DELIVERY", emoji: "🛵", label: "ส่งถึงที่" },
-              ].map((t) => (
-                <label
-                  key={t.v}
-                  className={`flex-1 border-2 rounded-xl p-3 text-center cursor-pointer transition ${
-                    form.deliveryType === t.v
-                      ? "border-orange-500 bg-orange-50 shadow-soft"
-                      : "border-stone-200 bg-white"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="dt"
-                    className="hidden"
-                    checked={form.deliveryType === t.v}
-                    onChange={() => setForm({ ...form, deliveryType: t.v })}
-                  />
-                  <div className="text-xl">{t.emoji}</div>
-                  <div className="text-sm font-semibold mt-0.5">{t.label}</div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="label">จำนวน (ชิ้น)</div>
-            <input
-              type="number"
-              min={1}
-              value={form.quantity}
-              onChange={(e) =>
-                setForm({ ...form, quantity: Math.max(1, Number(e.target.value)) })
-              }
-              className="field mt-1.5 text-lg font-semibold"
-            />
-            <div className="text-right text-sm mt-1.5 text-stone-500">
-              รวม{" "}
-              <span className="font-extrabold text-orange-700 text-base">
-                ฿{(product.price * form.quantity).toLocaleString()}
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <div className="label">วันที่นัดรับ / ส่ง</div>
-            <input
-              type="text"
-              placeholder="เช่น 5 พ.ค. ตอนเย็น"
-              value={form.pickupDateText}
-              onChange={(e) => setForm({ ...form, pickupDateText: e.target.value })}
-              className="field mt-1.5"
-            />
-          </div>
-
-          <div>
-            <div className="label">รายละเอียดเพิ่มเติม</div>
-            <textarea
-              rows={3}
-              placeholder="ที่อยู่จัดส่ง / รายละเอียดอื่นๆ"
-              value={form.deliveryDetail}
-              onChange={(e) => setForm({ ...form, deliveryDetail: e.target.value })}
-              className="field mt-1.5 resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="label">เบอร์ติดต่อ</div>
+            <div className="label">จำนวน</div>
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={() => setQty(Math.max(1, qty - 1))}
+                className="w-12 h-12 rounded-xl bg-white border-2 border-stone-200 flex items-center justify-center active:scale-95"
+              >
+                <Icon name="minus" size={20} strokeWidth={3} />
+              </button>
               <input
-                type="tel"
-                value={form.customerPhone}
-                onChange={(e) => setForm({ ...form, customerPhone: e.target.value })}
-                className="field mt-1.5"
+                type="number"
+                min={1}
+                value={qty}
+                onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
+                className="field flex-1 text-center text-xl font-extrabold"
               />
+              <button
+                onClick={() => setQty(qty + 1)}
+                className="w-12 h-12 rounded-xl bg-white border-2 border-stone-200 flex items-center justify-center active:scale-95"
+              >
+                <Icon name="plus" size={20} strokeWidth={3} />
+              </button>
             </div>
-            <div>
-              <div className="label">ชื่อ</div>
-              <input
-                type="text"
-                value={form.customerName}
-                onChange={(e) => setForm({ ...form, customerName: e.target.value })}
-                className="field mt-1.5"
-              />
+          </div>
+          <div className="rounded-2xl p-4 text-center bg-gradient-to-br from-amber-100 via-orange-100 to-yellow-100 border border-amber-200">
+            <div className="text-stone-600 text-xs font-semibold tracking-wider uppercase">
+              ราคารวม
+            </div>
+            <div className="text-3xl font-black text-orange-700 mt-1">
+              ฿{total.toLocaleString()}
             </div>
           </div>
         </div>
 
-        <div className="p-4 border-t border-stone-100 flex gap-2 sticky bottom-0 bg-white">
+        <div className="p-4 border-t border-stone-100 grid grid-cols-3 gap-2">
           <button
             onClick={onClose}
-            className="btn-ghost flex-1 rounded-xl py-3.5 font-semibold"
+            className="btn-ghost rounded-xl py-3 font-semibold text-sm"
           >
             ยกเลิก
           </button>
           <button
-            onClick={submit}
-            disabled={submitting}
-            className="btn-primary flex-1 rounded-xl py-3.5 font-bold disabled:opacity-50"
+            onClick={() => addToCart(false)}
+            className="btn-amber rounded-xl py-3 font-bold text-sm"
           >
-            {submitting ? "กำลังส่ง..." : "สั่งเลย"}
+            + ตะกร้า
           </button>
+          <Link
+            href="/preorder/cart"
+            onClick={() => {
+              cart.add({
+                productId: product.id,
+                name: product.name,
+                price: product.price,
+                imageUrl: product.imageUrl,
+                quantity: qty,
+              });
+            }}
+            className="btn-primary rounded-xl py-3 font-bold text-sm flex items-center justify-center"
+          >
+            สั่งเลย
+          </Link>
         </div>
       </div>
     </div>

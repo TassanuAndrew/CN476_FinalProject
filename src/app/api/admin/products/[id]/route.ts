@@ -19,6 +19,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await prisma.product.delete({ where: { id: Number(id) } });
+  const productId = Number(id);
+  // If product has existing order history, hard-delete would violate FK.
+  // Fall back to soft-delete (active=false) so the product disappears from
+  // the customer view but historical orders remain intact.
+  const used = await prisma.orderItem.count({ where: { productId } });
+  if (used > 0) {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { active: false },
+    });
+    return NextResponse.json({ ok: true, soft: true });
+  }
+  await prisma.product.delete({ where: { id: productId } });
   return NextResponse.json({ ok: true });
 }

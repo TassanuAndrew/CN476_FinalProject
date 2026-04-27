@@ -5,8 +5,7 @@ import { sendPushToAdmins } from "@/lib/push";
 export async function POST(req: Request) {
   const body = await req.json();
   const {
-    productId,
-    quantity,
+    items, // [{productId, quantity}]
     deliveryType, // PICKUP | DELIVERY
     deliveryDetail,
     pickupDateText,
@@ -14,14 +13,29 @@ export async function POST(req: Request) {
     customerPhone,
   } = body;
 
-  if (!productId || !quantity || quantity < 1) {
-    return NextResponse.json({ error: "ข้อมูลไม่ครบ" }, { status: 400 });
+  if (!Array.isArray(items) || items.length === 0) {
+    return NextResponse.json({ error: "ไม่มีรายการสินค้า" }, { status: 400 });
   }
 
-  const product = await prisma.product.findUnique({ where: { id: Number(productId) } });
-  if (!product) return NextResponse.json({ error: "ไม่พบสินค้า" }, { status: 404 });
+  const ids = items.map((i: { productId: number }) => Number(i.productId));
+  const products = await prisma.product.findMany({ where: { id: { in: ids } } });
+  const map = new Map(products.map((p) => [p.id, p]));
 
-  const totalPrice = product.price * Number(quantity);
+  let totalPrice = 0;
+  const orderItems = items.map(
+    (i: { productId: number; quantity: number }) => {
+      const p = map.get(Number(i.productId));
+      if (!p) throw new Error("ไม่พบสินค้า");
+      const q = Math.max(1, Number(i.quantity));
+      totalPrice += p.price * q;
+      return {
+        productId: p.id,
+        productName: p.name,
+        quantity: q,
+        priceAtOrder: p.price,
+      };
+    }
+  );
 
   const order = await prisma.order.create({
     data: {
@@ -33,23 +47,18 @@ export async function POST(req: Request) {
       deliveryDetail: deliveryDetail || null,
       pickupDateText: pickupDateText || null,
       totalPrice,
-      items: {
-        create: [
-          {
-            productId: product.id,
-            productName: product.name,
-            quantity: Number(quantity),
-            priceAtOrder: product.price,
-          },
-        ],
-      },
+      items: { create: orderItems },
     },
     include: { items: true },
   });
 
+  const summary = orderItems
+    .map((i) => `${i.productName} x${i.quantity}`)
+    .join(", ");
+
   await sendPushToAdmins({
-    title: "📦 ออเดอร์สั่งล่วงหน้าใหม่!",
-    body: `${product.name} x${quantity} = ${totalPrice}฿`,
+    title: "ออเดอร์สั่งล่วงหน้าใหม่!",
+    body: `${summary} = ${totalPrice}฿`,
     url: "/admin",
     sound: true,
     tag: `order-${order.id}`,

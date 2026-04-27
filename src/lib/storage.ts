@@ -16,4 +16,4 @@ export function getStorageClient(): SupabaseClient | null {
   return cached;
 }
 
-export const PRODUCT_BUCKET = "products";
+export const PRODUCT_BUCKET = "Bankanomjeen";

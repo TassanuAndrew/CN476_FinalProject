@@ -299,6 +299,8 @@ public/
 - [ ] Upload product image (jpg < 2MB) → appears in catalog
 - [ ] Upload 5MB image → rejected with size error
 - [ ] Delete product that has past orders → soft-deleted (active=false)
+- [ ] Admin stats page shows today/month revenue + top items
+- [ ] Print receipt → only modal contents visible (nav hidden)
 - [ ] On iPhone: install PWA → grant permission → new order → notification arrives
 
 ---

@@ -203,13 +203,7 @@ function BuyModal({ product, onClose }: { product: Product; onClose: () => void 
           </div>
         </div>
 
-        <div className="p-4 border-t border-stone-100 grid grid-cols-3 gap-2">
-          <button
-            onClick={onClose}
-            className="btn-ghost rounded-xl py-3 font-semibold text-sm"
-          >
-            ยกเลิก
-          </button>
+        <div className="p-4 border-t border-stone-100 grid grid-cols-2 gap-2">
           <button
             onClick={addToCart}
             className="btn-amber rounded-xl py-3 font-bold text-sm"
